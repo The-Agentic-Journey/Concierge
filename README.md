@@ -167,17 +167,11 @@ spec:
 
 ## Release
 
-Releases werden automatisch via GitHub Actions erstellt:
+Continuous Release via GitHub Actions:
 
-- **Push auf `main`**: Baut und pusht `ghcr.io/the-agentic-journey/concierge:main`
-- **Tag `v*`**: Baut und pusht `ghcr.io/the-agentic-journey/concierge:v1.2.3` und `ghcr.io/the-agentic-journey/concierge:1.2`
-
-### Neues Release erstellen
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
+- Jeder Push auf `main` baut automatisch ein neues Image
+- Tag ist die Build-Nummer: `ghcr.io/the-agentic-journey/concierge:42`
+- Zusätzlich wird `latest` aktualisiert
 
 ## Voraussetzungen
 
