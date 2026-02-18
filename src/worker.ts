@@ -31,7 +31,7 @@ export async function processInVM(content: string): Promise<ProcessResult> {
       set -e
       git clone --depth 1 --branch ${config.repo.branch} ${config.repo.url} /workspace 2>/dev/null
       cd /workspace
-      echo '${escapedContent}' | claude --print "$(cat ANWEISUNG.md)"
+      echo '${escapedContent}' | ./process-input.sh
     `;
 
     console.log("[worker] Executing in VM...");
