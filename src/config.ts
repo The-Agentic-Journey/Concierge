@@ -18,7 +18,7 @@ export const config = {
   },
 
   ssh: {
-    user: process.env.SSH_USER || "root",
+    user: process.env.SSH_USER || "scalebox",
   },
 
   knowledgeRepo: {
@@ -27,6 +27,6 @@ export const config = {
   },
 
   execution: {
-    timeoutMs: parseInt(process.env.EXECUTION_TIMEOUT_MS || "300000"),
+    timeoutMs: parseInt(process.env.EXECUTION_TIMEOUT_MS || "1200000"),
   },
 };
