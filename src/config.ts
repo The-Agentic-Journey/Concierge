@@ -18,7 +18,7 @@ export const config = {
   },
 
   ssh: {
-    user: process.env.SSH_USER || "scalebox",
+    user: process.env.SSH_USER || "user",
   },
 
   knowledgeRepo: {
