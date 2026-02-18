@@ -1,6 +1,8 @@
-import { Client } from "ssh2";
+import { Client, SFTPWrapper } from "ssh2";
 import { config } from "./config.js";
 import { getKeyPair } from "./keygen.js";
+import { readdir, readFile, stat } from "fs/promises";
+import { join, basename } from "path";
 
 interface ExecResult {
   stdout: string;
@@ -98,4 +100,87 @@ export async function sshExecWithRetry(
   }
 
   throw lastError;
+}
+
+// Copy a local directory to the VM via SFTP
+export async function scpToVM(
+  host: string,
+  port: number,
+  localDir: string,
+  remoteDir: string
+): Promise<void> {
+  const { privateKey } = getKeyPair();
+
+  return new Promise((resolve, reject) => {
+    const conn = new Client();
+
+    conn.on("ready", () => {
+      conn.sftp(async (err, sftp) => {
+        if (err) {
+          conn.end();
+          reject(err);
+          return;
+        }
+
+        try {
+          await uploadDir(sftp, localDir, remoteDir);
+          conn.end();
+          resolve();
+        } catch (uploadErr) {
+          conn.end();
+          reject(uploadErr);
+        }
+      });
+    });
+
+    conn.on("error", reject);
+
+    conn.connect({
+      host,
+      port,
+      username: config.ssh.user,
+      privateKey,
+      readyTimeout: 10000,
+    });
+  });
+}
+
+async function uploadDir(
+  sftp: SFTPWrapper,
+  localDir: string,
+  remoteDir: string
+): Promise<void> {
+  // Create remote directory
+  await new Promise<void>((res, rej) => {
+    sftp.mkdir(remoteDir, (err) => {
+      if (err && (err as NodeJS.ErrnoException).code !== "EEXIST") {
+        rej(err);
+      } else {
+        res();
+      }
+    });
+  });
+
+  const entries = await readdir(localDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const localPath = join(localDir, entry.name);
+    const remotePath = `${remoteDir}/${entry.name}`;
+
+    if (entry.isDirectory()) {
+      await uploadDir(sftp, localPath, remotePath);
+    } else if (entry.isFile()) {
+      const content = await readFile(localPath);
+      const localStat = await stat(localPath);
+
+      await new Promise<void>((res, rej) => {
+        const writeStream = sftp.createWriteStream(remotePath, {
+          mode: localStat.mode,
+        });
+        writeStream.on("error", rej);
+        writeStream.on("close", () => res());
+        writeStream.end(content);
+      });
+    }
+  }
 }

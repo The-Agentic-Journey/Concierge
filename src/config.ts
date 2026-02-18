@@ -21,9 +21,9 @@ export const config = {
     user: process.env.SSH_USER || "root",
   },
 
-  repo: {
-    url: required("REPO_URL"),
-    branch: process.env.REPO_BRANCH || "main",
+  knowledgeRepo: {
+    url: required("KNOWLEDGE_REPO_URL"),
+    branch: process.env.KNOWLEDGE_REPO_BRANCH || "main",
   },
 
   execution: {

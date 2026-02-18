@@ -1,6 +1,7 @@
 import { scalebox } from "./scalebox.js";
-import { sshExecWithRetry } from "./ssh.js";
+import { sshExecWithRetry, scpToVM } from "./ssh.js";
 import { config } from "./config.js";
+import { resolve } from "path";
 
 interface ProcessResult {
   success: boolean;
@@ -9,6 +10,9 @@ interface ProcessResult {
   vmId: string;
   durationMs: number;
 }
+
+// Scripts that need to be copied to the VM
+const SCRIPTS_DIR = resolve(import.meta.dirname, "../scripts");
 
 export async function processInVM(content: string): Promise<ProcessResult> {
   const startTime = Date.now();
@@ -21,17 +25,25 @@ export async function processInVM(content: string): Promise<ProcessResult> {
     vmId = vm.id;
     console.log(`[worker] VM created: ${vmId} on port ${vm.ssh_port}`);
 
-    // 2. Escape content for shell
+    // 2. Copy scripts into VM
+    console.log("[worker] Copying scripts to VM...");
+    await scpToVM(config.scalebox.host, vm.ssh_port, SCRIPTS_DIR, "/scripts");
+
+    // 3. Escape content for shell
     const escapedContent = content
       .replace(/\\/g, "\\\\")
       .replace(/'/g, "'\"'\"'");
 
-    // 3. Execute in VM
+    // 4. Execute in VM
     const command = `
       set -e
-      git clone --depth 1 --branch ${config.repo.branch} ${config.repo.url} /workspace 2>/dev/null
-      cd /workspace
-      echo '${escapedContent}' | ./process-input.sh
+
+      # Clone knowledge repo (data only)
+      git clone --branch ${config.knowledgeRepo.branch} ${config.knowledgeRepo.url} /knowledge 2>/dev/null
+
+      # Run process-input from copied scripts, working in knowledge repo
+      cd /knowledge
+      echo '${escapedContent}' | /scripts/process-input.sh
     `;
 
     console.log("[worker] Executing in VM...");
@@ -52,7 +64,7 @@ export async function processInVM(content: string): Promise<ProcessResult> {
       durationMs,
     };
   } finally {
-    // 4. Always cleanup VM
+    // 5. Always cleanup VM
     if (vmId) {
       console.log(`[worker] Deleting VM ${vmId}...`);
       try {
