@@ -78,5 +78,15 @@ app.post("/ingest/text", async (c) => {
 });
 
 console.log(`Starting server on port ${config.port}...`);
-serve({ fetch: app.fetch, port: config.port });
+const server = serve({ fetch: app.fetch, port: config.port });
 console.log(`Server running at http://localhost:${config.port}`);
+
+// Graceful shutdown
+const shutdown = () => {
+  console.log("\nShutting down...");
+  server.close();
+  process.exit(0);
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
