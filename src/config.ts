@@ -6,17 +6,14 @@ function required(name: string): string {
   return value;
 }
 
-const scaleboxApiUrl = required("SCALEBOX_API_URL");
-
 export const config = {
   port: parseInt(process.env.PORT || "8080"),
   authToken: required("AUTH_TOKEN"),
 
   scalebox: {
-    apiUrl: scaleboxApiUrl,
+    apiUrl: required("SCALEBOX_API_URL"),
     apiToken: required("SCALEBOX_API_TOKEN"),
     template: process.env.SCALEBOX_TEMPLATE || "agentic-0-authenticated",
-    host: new URL(scaleboxApiUrl).hostname, // SSH port is exposed on API host
   },
 
   ssh: {

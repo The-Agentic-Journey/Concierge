@@ -23,11 +23,18 @@ export async function processInVM(content: string, date?: string): Promise<Proce
     console.log("[worker] Creating VM...");
     const vm = await scalebox.createVM();
     vmId = vm.id;
-    console.log(`[worker] VM created: ${vmId}, SSH at ${config.scalebox.host}:${vm.ssh_port}`);
+    // Parse SSH host from ssh command string (e.g., "ssh user@host -p 22001")
+    const sshMatch = vm.ssh.match(/@([^\s]+)/);
+    if (!sshMatch) {
+      throw new Error(`Cannot parse SSH host from: ${vm.ssh}`);
+    }
+    const sshHost = sshMatch[1];
+
+    console.log(`[worker] VM created: ${vmId}, SSH at ${sshHost}:${vm.ssh_port}`);
 
     // 2. Copy scripts into VM
     console.log("[worker] Copying scripts to VM...");
-    await scpToVM(config.scalebox.host, vm.ssh_port, SCRIPTS_DIR, "/scripts");
+    await scpToVM(sshHost, vm.ssh_port, SCRIPTS_DIR, "/scripts");
 
     // 3. Prepend date context if provided
     const fullContent = date
@@ -53,7 +60,7 @@ export async function processInVM(content: string, date?: string): Promise<Proce
 
     console.log("[worker] Executing in VM...");
     const result = await sshExecWithRetry(
-      config.scalebox.host,
+      sshHost,
       vm.ssh_port,
       command
     );
