@@ -6,7 +6,8 @@ import { resolve } from "path";
 interface ProcessResult {
   success: boolean;
   output: string;
-  error?: string;
+  error: string;
+  exitCode: number;
   vmId: string;
   durationMs: number;
 }
@@ -50,12 +51,18 @@ export async function processInVM(content: string, date?: string): Promise<Proce
     const command = `
       set -e
 
-      # Clone knowledge repo (data only)
-      git clone --branch ${config.knowledgeRepo.branch} ${config.knowledgeRepo.url} /knowledge 2>/dev/null
+      echo "[vm] Starting execution..." >&2
+      echo "[vm] Listing /tmp/scripts..." >&2
+      ls -la /tmp/scripts/ >&2
 
-      # Run process-input from copied scripts, working in knowledge repo
-      cd /knowledge
+      echo "[vm] Cloning knowledge repo..." >&2
+      git clone --branch ${config.knowledgeRepo.branch} ${config.knowledgeRepo.url} /tmp/knowledge
+
+      echo "[vm] Running process-input.sh..." >&2
+      cd /tmp/knowledge
       echo '${escapedContent}' | /tmp/scripts/process-input.sh
+
+      echo "[vm] Done." >&2
     `;
 
     console.log("[worker] Executing in VM...");
@@ -66,12 +73,22 @@ export async function processInVM(content: string, date?: string): Promise<Proce
     );
 
     const durationMs = Date.now() - startTime;
+
+    // Log full VM output
+    console.log(`[worker] Exit code: ${result.code}`);
+    if (result.stdout) {
+      console.log(`[worker] stdout:\n${result.stdout}`);
+    }
+    if (result.stderr) {
+      console.log(`[worker] stderr:\n${result.stderr}`);
+    }
     console.log(`[worker] Completed in ${durationMs}ms`);
 
     return {
       success: result.code === 0,
       output: result.stdout,
-      error: result.stderr || undefined,
+      error: result.stderr,
+      exitCode: result.code,
       vmId,
       durationMs,
     };
