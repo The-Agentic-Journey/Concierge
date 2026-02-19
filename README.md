@@ -80,6 +80,12 @@ curl -X POST http://localhost:8080/ingest \
   -H "Authorization: Bearer mein-geheimer-token" \
   -H "Content-Type: application/json" \
   -d '{"content": "Transkript vom Meeting..."}'
+
+# Mit Datum (für alte Transkripte)
+curl -X POST http://localhost:8080/ingest \
+  -H "Authorization: Bearer mein-geheimer-token" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Transkript vom Meeting...", "date": "2026-01-15"}'
 ```
 
 ### Ingest (Plain Text)
@@ -89,7 +95,17 @@ curl -X POST http://localhost:8080/ingest/text \
   -H "Authorization: Bearer mein-geheimer-token" \
   -d 'Transkript vom Meeting...'
 
-# Oder aus Datei
+# Mit Datum (Header oder Query-Parameter)
+curl -X POST http://localhost:8080/ingest/text \
+  -H "Authorization: Bearer mein-geheimer-token" \
+  -H "X-Date: 2026-01-15" \
+  -d 'Transkript vom Meeting...'
+
+curl -X POST "http://localhost:8080/ingest/text?date=2026-01-15" \
+  -H "Authorization: Bearer mein-geheimer-token" \
+  -d 'Transkript vom Meeting...'
+
+# Aus Datei
 curl -X POST http://localhost:8080/ingest/text \
   -H "Authorization: Bearer mein-geheimer-token" \
   --data-binary @transkript.txt
@@ -104,6 +120,55 @@ curl -X POST http://localhost:8080/ingest/text \
   "vmId": "vm-abc123",
   "durationMs": 45000
 }
+```
+
+## Schneller Workflow (Shell-Aliases)
+
+Füge diese Aliases zu deiner `~/.zshrc` oder `~/.bashrc` hinzu:
+
+```bash
+# Concierge URL und Token
+export CONCIERGE_URL="http://localhost:8080"
+export CONCIERGE_TOKEN="mein-geheimer-token"
+
+# Clipboard -> Concierge (heute)
+concierge() {
+  pbpaste | curl -sX POST "$CONCIERGE_URL/ingest/text" \
+    -H "Authorization: Bearer $CONCIERGE_TOKEN" \
+    --data-binary @- | jq
+}
+
+# Clipboard -> Concierge mit Datum
+# Verwendung: concierge-date 2026-01-15
+concierge-date() {
+  pbpaste | curl -sX POST "$CONCIERGE_URL/ingest/text?date=$1" \
+    -H "Authorization: Bearer $CONCIERGE_TOKEN" \
+    --data-binary @- | jq
+}
+
+# Interaktiv: Datum eingeben, dann Clipboard senden
+concierge-old() {
+  echo -n "Datum (YYYY-MM-DD): "
+  read date
+  pbpaste | curl -sX POST "$CONCIERGE_URL/ingest/text?date=$date" \
+    -H "Authorization: Bearer $CONCIERGE_TOKEN" \
+    --data-binary @- | jq
+}
+```
+
+### Verwendung
+
+```bash
+# 1. Transkript in Zwischenablage kopieren (Cmd+C)
+
+# 2. Für heutiges Transkript:
+concierge
+
+# 3. Für altes Transkript mit bekanntem Datum:
+concierge-date 2026-01-15
+
+# 4. Für altes Transkript (fragt nach Datum):
+concierge-old
 ```
 
 ## Deployment

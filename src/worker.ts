@@ -14,7 +14,7 @@ interface ProcessResult {
 // Scripts that need to be copied to the VM
 const SCRIPTS_DIR = resolve(import.meta.dirname, "../scripts");
 
-export async function processInVM(content: string): Promise<ProcessResult> {
+export async function processInVM(content: string, date?: string): Promise<ProcessResult> {
   const startTime = Date.now();
   let vmId: string | undefined;
 
@@ -29,12 +29,17 @@ export async function processInVM(content: string): Promise<ProcessResult> {
     console.log("[worker] Copying scripts to VM...");
     await scpToVM(config.scalebox.host, vm.ssh_port, SCRIPTS_DIR, "/scripts");
 
-    // 3. Escape content for shell
-    const escapedContent = content
+    // 3. Prepend date context if provided
+    const fullContent = date
+      ? `[Datum dieses Transkripts/dieser Notiz: ${date}]\n\n${content}`
+      : content;
+
+    // 4. Escape content for shell
+    const escapedContent = fullContent
       .replace(/\\/g, "\\\\")
       .replace(/'/g, "'\"'\"'");
 
-    // 4. Execute in VM
+    // 5. Execute in VM
     const command = `
       set -e
 
@@ -64,7 +69,7 @@ export async function processInVM(content: string): Promise<ProcessResult> {
       durationMs,
     };
   } finally {
-    // 5. Always cleanup VM
+    // 6. Always cleanup VM
     if (vmId) {
       console.log(`[worker] Deleting VM ${vmId}...`);
       try {

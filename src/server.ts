@@ -22,6 +22,7 @@ app.post("/ingest", async (c) => {
   try {
     const body = await c.req.json();
     const content = body.content;
+    const date = body.date; // Optional: ISO date string (e.g., "2026-01-15")
 
     if (!content || typeof content !== "string") {
       return c.json({ error: "Missing 'content' field" }, 400);
@@ -31,9 +32,9 @@ app.post("/ingest", async (c) => {
       return c.json({ error: "Content too large (max 500KB)" }, 400);
     }
 
-    console.log(`[ingest] Received ${content.length} bytes`);
+    console.log(`[ingest] Received ${content.length} bytes${date ? `, date: ${date}` : ""}`);
 
-    const result = await processInVM(content);
+    const result = await processInVM(content, date);
 
     return c.json(result);
   } catch (err) {
@@ -49,17 +50,19 @@ app.post("/ingest", async (c) => {
 });
 
 // Plain text endpoint (für einfaches curl)
+// Date can be passed via X-Date header or ?date= query param
 app.post("/ingest/text", async (c) => {
   try {
     const content = await c.req.text();
+    const date = c.req.header("X-Date") || c.req.query("date");
 
     if (!content) {
       return c.json({ error: "Empty body" }, 400);
     }
 
-    console.log(`[ingest/text] Received ${content.length} bytes`);
+    console.log(`[ingest/text] Received ${content.length} bytes${date ? `, date: ${date}` : ""}`);
 
-    const result = await processInVM(content);
+    const result = await processInVM(content, date);
 
     return c.json(result);
   } catch (err) {
