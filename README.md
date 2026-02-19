@@ -58,8 +58,6 @@ Alle Einstellungen erfolgen über Umgebungsvariablen:
 | `SCALEBOX_API_URL` | Ja | - | Scalebox API Endpoint |
 | `SCALEBOX_API_TOKEN` | Ja | - | Scalebox API Token |
 | `SCALEBOX_TEMPLATE` | Nein | `agentic-0-authenticated` | VM Template |
-| `SCALEBOX_HOST` | Nein | aus API URL | Scalebox Host für SSH (falls abweichend) |
-| `SSH_USER` | Nein | `user` | SSH Benutzer für VM |
 | `KNOWLEDGE_REPO_URL` | Ja | - | Git URL des Knowledge Repos |
 | `KNOWLEDGE_REPO_BRANCH` | Nein | `main` | Branch des Knowledge Repos |
 | `EXECUTION_TIMEOUT_MS` | Nein | `1200000` | Timeout in ms (20 Min) |
