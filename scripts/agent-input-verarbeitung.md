@@ -609,7 +609,7 @@ Für JEDE in diesem Durchlauf erstellte/geänderte Entität:
 
 ## Abschluss: Commit, Push & Report
 
-### 1. Git Commit erstellen
+### 1. Git Commit erstellen (Inhalt)
 
 ```bash
 git add -A
@@ -642,52 +642,93 @@ Aktionen: 3 neue
 git push
 ```
 
-### 3. Strukturierter Report (YAML)
+### 3. Commit-ID holen
 
-Am Ende IMMER diesen Report auf stdout ausgeben:
-
-```yaml
----
-status: success
-input_typ: transkript|notiz|sprachnachricht
-commit: [commit-hash]
-datum: YYYY-MM-DD
-
-erstellt:
-  termine:
-    - id: "2026-02-18_pq-at-bridgewave_morgenroutine"
-      titel: "PQ-Coaching: Morgenroutine"
-  stakeholder:
-    - id: "max-mueller"
-      name: "Max Müller"
-  projekte:
-    - id: "pq-at-bridgewave"
-      name: "PQ @ BridgeWave"
-  organisationen: []
-  aktionen:
-    - id: "a006"
-      aktion: "Fokusblocker einrichten"
-      owner: "christof-gerlach"
-
-aktualisiert:
-  stakeholder:
-    - id: "christof-gerlach"
-      aenderung: "Notiz hinzugefügt"
-  projekte:
-    - id: "pq-at-bridgewave"
-      aenderung: "Aktueller Stand + Notiz"
-
-entscheidungen:
-  - "Projekt 'pq-at-bridgewave' wiederverwendet (Stakeholder-Match)"
-  - "Stakeholder 'jakob' als Coach identifiziert → jakob-coach"
-  - "3 Aktionen aus Commitments extrahiert"
-
-unsicherheiten: []
----
+```bash
+COMMIT_ID=$(git rev-parse --short HEAD)
 ```
 
-**Wichtig:**
-- Report geht auf stdout (nicht stderr)
-- YAML-Format für maschinelle Verarbeitung
-- Leere Listen als `[]` ausgeben
-- Commit-Hash aus `git rev-parse --short HEAD` holen
+### 4. Report-Datei erstellen
+
+Erstelle die Datei `/reports/YYYY-MM-DD-HHMMSS-{COMMIT_ID}.md` mit folgendem Format:
+
+```markdown
+# Verarbeitungsreport
+
+**Zeitstempel:** YYYY-MM-DDTHH:MM:SS
+**Input-Datum:** [Datum aus Input, falls angegeben]
+**Commit:** [COMMIT_ID]
+**Input-Typ:** Transkript|Notiz|Sprachnachricht
+
+## Erstellte Dateien
+
+- 📝 `/termine/2026-02-11_pq-at-bridgewave_session/termin.md`
+- 📝 `/stakeholder/max-mueller.md`
+[Alle neu erstellten Dateien auflisten]
+
+## Aktualisierte Dateien
+
+- ✏️ `/stakeholder/christof-gerlach.md` — Notiz hinzugefügt
+- ✏️ `/projekte/pq-at-bridgewave/projekt.md` — Stand aktualisiert
+[Alle aktualisierten Dateien mit Änderungsgrund auflisten]
+
+## Entscheidungen
+
+### [Entscheidung 1: z.B. Projekt-Zuordnung]
+
+**Entscheidung:** [Was wurde entschieden]
+**Begründung:** [Ausführliche Begründung warum diese Entscheidung getroffen wurde]
+**Alternativen geprüft:** [Welche anderen Optionen wurden erwogen und warum verworfen]
+
+### [Entscheidung 2: z.B. Stakeholder-Matching]
+
+**Entscheidung:** [Was wurde entschieden]
+**Begründung:** [Ausführliche Begründung]
+**Kontext:** [Relevanter Kontext aus dem Input]
+
+### [Weitere Entscheidungen...]
+
+[JEDE relevante Entscheidung dokumentieren:
+- Warum wurde ein Projekt zugeordnet/neu angelegt?
+- Warum wurde ein Stakeholder gematcht/neu angelegt?
+- Warum wurde eine Organisation zugeordnet?
+- Wie wurden Aktionen extrahiert und wem zugewiesen?
+- Warum wurde Input als Transkript/Notiz klassifiziert?
+- Bei Fortsetzungen: Warum als Fortsetzung erkannt?]
+
+## Unsicherheiten
+
+[Alles auflisten, wo du dir nicht sicher warst:]
+- [Unsicherheit 1 mit Erklärung]
+- [Unsicherheit 2 mit Erklärung]
+
+[Falls keine Unsicherheiten: Abschnitt weglassen]
+
+## Zusammenfassung
+
+✅ [Kurze Summary: X Termine, Y Stakeholder, Z Aktionen, etc.]
+```
+
+**Wichtig für den Report:**
+- JEDE Entscheidung ausführlich dokumentieren — dies dient dem Lernen und Feedback
+- Bei Unsicherheiten ehrlich sein — lieber zu viel dokumentieren als zu wenig
+- Begründungen sollen nachvollziehbar machen, WARUM so entschieden wurde
+- Alternativen nennen um Denkprozess transparent zu machen
+
+### 5. Report committen und pushen
+
+```bash
+git add reports/
+git commit -m "report: Verarbeitungsreport für ${COMMIT_ID}"
+git push
+```
+
+### 6. Summary auf stdout
+
+Am Ende NUR diese eine Zeile auf stdout ausgeben (für die Client-Response):
+
+```
+✅ Fertig — [X Stakeholder, Y Termine, Z Aktionen, etc.]
+```
+
+Diese Zeile wird dem Benutzer angezeigt. Alle Details stehen im Report.

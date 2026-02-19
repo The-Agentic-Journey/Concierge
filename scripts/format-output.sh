@@ -14,9 +14,8 @@ declare -i stakeholder=0 termine=0 aktionen=0 projekte=0 orgs=0 notizen=0 index_
 start_time=$SECONDS
 first_output=true
 
-# Buffer für finalen Text-Output
+# Buffer für Agent-Summary
 final_text=""
-in_yaml=false
 
 count_path() {
   local path="$1"
@@ -121,20 +120,18 @@ while IFS= read -r line; do
     esac
   fi
 
-  # Text-Content aus assistant messages extrahieren (für YAML-Report)
+  # Text-Content aus assistant messages extrahieren
   text_content=$(echo "$line" | jq -r '
     .message.content[]? |
     select(.type == "text") |
     .text // empty
   ' 2>/dev/null)
 
+  # Speichere Text-Content (letzter wird die Summary sein)
   if [[ -n "$text_content" ]]; then
-    # Prüfe ob YAML-Report beginnt
-    if [[ "$text_content" == *"---"* && "$text_content" == *"status:"* ]]; then
-      in_yaml=true
-    fi
-    if $in_yaml; then
-      final_text+="$text_content"
+    # Prüfe ob es die Summary-Zeile ist (✅ Fertig...)
+    if [[ "$text_content" == *"✅"* ]]; then
+      final_text="$text_content"
     fi
   fi
 
@@ -143,9 +140,8 @@ while IFS= read -r line; do
     echo "" >&2
     print_summary >&2
 
-    # YAML-Report auf stdout ausgeben
+    # Agent-Summary auf stdout ausgeben (für Client)
     if [[ -n "$final_text" ]]; then
-      echo "" >&2
       echo "$final_text"
     fi
   fi
