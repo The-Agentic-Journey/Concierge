@@ -50,6 +50,7 @@ export async function processInVM(content: string, date?: string): Promise<Proce
     // 5. Execute in VM
     const command = `
       set -e
+      export PATH="$HOME/.local/bin:$PATH"
 
       echo "[vm] Starting execution..." >&2
       echo "[vm] Listing /tmp/scripts..." >&2
