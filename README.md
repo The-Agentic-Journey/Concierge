@@ -25,12 +25,11 @@ docker pull ghcr.io/the-agentic-journey/concierge:latest
 
 # Container starten
 docker run -d \
-  --name ingest-gateway \
+  --name concierge \
   -p 8080:8080 \
   -e AUTH_TOKEN=mein-geheimer-token \
   -e SCALEBOX_API_URL=https://scalebox.example.com \
   -e SCALEBOX_API_TOKEN=sb-token \
-  -e SCALEBOX_HOST=scalebox.example.com \
   -e KNOWLEDGE_REPO_URL=git@github.com:user/knowledge.git \
   ghcr.io/the-agentic-journey/concierge:latest
 ```
@@ -59,7 +58,7 @@ Alle Einstellungen erfolgen über Umgebungsvariablen:
 | `SCALEBOX_API_URL` | Ja | - | Scalebox API Endpoint |
 | `SCALEBOX_API_TOKEN` | Ja | - | Scalebox API Token |
 | `SCALEBOX_TEMPLATE` | Nein | `agentic-0-authenticated` | VM Template |
-| `SCALEBOX_HOST` | Ja | - | Scalebox Host für SSH |
+| `SCALEBOX_HOST` | Nein | aus API URL | Scalebox Host für SSH (falls abweichend) |
 | `SSH_USER` | Nein | `user` | SSH Benutzer für VM |
 | `KNOWLEDGE_REPO_URL` | Ja | - | Git URL des Knowledge Repos |
 | `KNOWLEDGE_REPO_BRANCH` | Nein | `main` | Branch des Knowledge Repos |
@@ -187,7 +186,6 @@ services:
       - AUTH_TOKEN=${AUTH_TOKEN}
       - SCALEBOX_API_URL=${SCALEBOX_API_URL}
       - SCALEBOX_API_TOKEN=${SCALEBOX_API_TOKEN}
-      - SCALEBOX_HOST=${SCALEBOX_HOST}
       - KNOWLEDGE_REPO_URL=${KNOWLEDGE_REPO_URL}
     restart: unless-stopped
 ```
