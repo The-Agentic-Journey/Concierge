@@ -32,9 +32,9 @@ export async function processInVM(content: string, date?: string): Promise<Proce
 
     console.log(`[worker] VM created: ${vmId}, SSH at ${sshHost}:${vm.ssh_port}`);
 
-    // 2. Copy scripts into VM
+    // 2. Copy scripts into VM (use /tmp - user has write access)
     console.log("[worker] Copying scripts to VM...");
-    await scpToVM(sshHost, vm.ssh_port, SCRIPTS_DIR, "/scripts");
+    await scpToVM(sshHost, vm.ssh_port, SCRIPTS_DIR, "/tmp/scripts");
 
     // 3. Prepend date context if provided
     const fullContent = date
@@ -55,7 +55,7 @@ export async function processInVM(content: string, date?: string): Promise<Proce
 
       # Run process-input from copied scripts, working in knowledge repo
       cd /knowledge
-      echo '${escapedContent}' | /scripts/process-input.sh
+      echo '${escapedContent}' | /tmp/scripts/process-input.sh
     `;
 
     console.log("[worker] Executing in VM...");
