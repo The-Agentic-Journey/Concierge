@@ -53,7 +53,17 @@ export class ScaleboxClient {
   }
 
   async deleteVM(id: string): Promise<void> {
-    await this.request("DELETE", `/vms/${id}`);
+    const res = await fetch(`${this.baseUrl}/vms/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Scalebox API error: ${res.status} - ${text}`);
+    }
   }
 
   async getVM(id: string): Promise<VMResponse> {
