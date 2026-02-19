@@ -113,9 +113,11 @@ curl -X POST http://localhost:8080/ingest/text \
 ```json
 {
   "success": true,
-  "output": "Agent Output...",
+  "output": "✅ Fertig in 5m 3s — 2 Stakeholder, 1 Termin, 3 Aktionen",
+  "error": "",
+  "exitCode": 0,
   "vmId": "vm-abc123",
-  "durationMs": 45000
+  "durationMs": 303000
 }
 ```
 
@@ -132,7 +134,7 @@ export CONCIERGE_TOKEN="mein-geheimer-token"
 concierge() {
   pbpaste | curl -sX POST "$CONCIERGE_URL/ingest/text" \
     -H "Authorization: Bearer $CONCIERGE_TOKEN" \
-    --data-binary @- | jq
+    --data-binary @- | jq -r 'if .success then .output else "❌ Fehler: \(.error)" end'
 }
 
 # Clipboard -> Concierge mit Datum
@@ -140,7 +142,7 @@ concierge() {
 concierge-date() {
   pbpaste | curl -sX POST "$CONCIERGE_URL/ingest/text?date=$1" \
     -H "Authorization: Bearer $CONCIERGE_TOKEN" \
-    --data-binary @- | jq
+    --data-binary @- | jq -r 'if .success then .output else "❌ Fehler: \(.error)" end'
 }
 
 # Interaktiv: Datum eingeben, dann Clipboard senden
@@ -149,7 +151,7 @@ concierge-old() {
   read date
   pbpaste | curl -sX POST "$CONCIERGE_URL/ingest/text?date=$date" \
     -H "Authorization: Bearer $CONCIERGE_TOKEN" \
-    --data-binary @- | jq
+    --data-binary @- | jq -r 'if .success then .output else "❌ Fehler: \(.error)" end'
 }
 ```
 

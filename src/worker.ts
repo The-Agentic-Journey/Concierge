@@ -52,18 +52,10 @@ export async function processInVM(content: string, date?: string): Promise<Proce
       set -e
       export PATH="$HOME/.local/bin:$PATH"
 
-      echo "[vm] Starting execution..." >&2
-      echo "[vm] Listing /tmp/scripts..." >&2
-      ls -la /tmp/scripts/ >&2
+      git clone --quiet --branch ${config.knowledgeRepo.branch} ${config.knowledgeRepo.url} /tmp/knowledge
 
-      echo "[vm] Cloning knowledge repo..." >&2
-      git clone --branch ${config.knowledgeRepo.branch} ${config.knowledgeRepo.url} /tmp/knowledge
-
-      echo "[vm] Running process-input.sh..." >&2
       cd /tmp/knowledge
       echo '${escapedContent}' | /tmp/scripts/process-input.sh
-
-      echo "[vm] Done." >&2
     `;
 
     console.log("[worker] Executing in VM...");
